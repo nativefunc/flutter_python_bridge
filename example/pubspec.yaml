@@ -1,0 +1,21 @@
+name: flutter_python_bridge_example
+description: Demonstrates flutter_python_bridge.
+publish_to: none
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_python_bridge:
+    path: ../
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/python/demo_project.zip

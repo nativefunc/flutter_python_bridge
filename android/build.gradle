@@ -1,0 +1,94 @@
+group = 'dev.cpythonruntime.cpython_runtime'
+version = '0.3.0'
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.7.3'
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    namespace 'dev.cpythonruntime.cpython_runtime'
+    compileSdk 35
+
+    defaultConfig {
+        minSdk 24
+        ndk {
+            abiFilters 'arm64-v8a', 'x86_64'
+        }
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path 'src/main/cpp/CMakeLists.txt'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    sourceSets {
+        main {
+            assets.srcDirs = ['src/main/assets']
+            jniLibs.srcDirs = ['src/main/jniLibs']
+        }
+    }
+
+    androidResources {
+        ignoreAssetsPattern = 'flutter-python-dont-ignore-anything'
+        noCompress 'gz', 'zip'
+    }
+
+    buildFeatures {
+        aidl true
+    }
+}
+
+repositories {
+    google()
+    mavenCentral()
+}
+
+def requiredRuntimeFiles = [
+    file('runtime/arm64-v8a/prefix/include/python3.14/Python.h'),
+    file('runtime/arm64-v8a/prefix/lib/libpython3.14.so'),
+    file('runtime/x86_64/prefix/include/python3.14/Python.h'),
+    file('runtime/x86_64/prefix/lib/libpython3.14.so'),
+    file('src/main/assets/python/python-home-arm64-v8a.zip'),
+    file('src/main/assets/python/python-home-x86_64.zip'),
+    file('src/main/jniLibs/arm64-v8a/libpython3.14.so'),
+    file('src/main/jniLibs/arm64-v8a/libpython3.so'),
+    file('src/main/jniLibs/arm64-v8a/libcrypto_python.so'),
+    file('src/main/jniLibs/arm64-v8a/libsqlite3_python.so'),
+    file('src/main/jniLibs/arm64-v8a/libssl_python.so'),
+    file('src/main/jniLibs/x86_64/libpython3.14.so'),
+    file('src/main/jniLibs/x86_64/libpython3.so'),
+    file('src/main/jniLibs/x86_64/libcrypto_python.so'),
+    file('src/main/jniLibs/x86_64/libsqlite3_python.so'),
+    file('src/main/jniLibs/x86_64/libssl_python.so'),
+]
+
+tasks.register('verifyPythonRuntime') {
+    doLast {
+        def missing = requiredRuntimeFiles.findAll { !it.isFile() }
+        if (!missing.isEmpty()) {
+            throw new GradleException('Missing CPython runtime files:\n' + missing.join('\n'))
+        }
+    }
+}
+
+tasks.named('preBuild').configure {
+    dependsOn 'verifyPythonRuntime'
+}
